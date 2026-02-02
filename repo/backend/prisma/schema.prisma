@@ -12,6 +12,22 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  ADMIN
+  VENDEDOR
+  REPOSITOR
+}
+
+model Usuario {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ADMIN)
+  ventas       Venta[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Cliente {
   id        Int     @id @default(autoincrement())
   nombre    String
@@ -62,8 +78,10 @@ model Venta {
   total      Decimal
   clienteId  Int
   sucursalId Int
+  usuarioId  Int?
   cliente    Cliente        @relation(fields: [clienteId], references: [id])
   sucursal   Sucursal       @relation(fields: [sucursalId], references: [id])
+  usuario    Usuario?       @relation(fields: [usuarioId], references: [id])
   detalles   DetalleVenta[]
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt

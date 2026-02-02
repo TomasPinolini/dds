@@ -52,6 +52,11 @@ const registrarVenta = async (req, res, next) => {
       });
     }
 
+    const usuarioId = parseId(req.user?.sub);
+    if (Number.isNaN(usuarioId)) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
+
     const clienteId = parseId(req.body.clienteId);
     const sucursalId = parseId(req.body.sucursalId);
     const items = req.body.items;
@@ -77,7 +82,7 @@ const registrarVenta = async (req, res, next) => {
       }
     }
 
-    const venta = await ventasService.registrarVenta({ clienteId, sucursalId, items });
+    const venta = await ventasService.registrarVenta({ usuarioId, clienteId, sucursalId, items });
     res.status(201).json(venta);
   } catch (error) {
     next(error);

@@ -14,6 +14,7 @@ const list = (filters = {}) => {
   return prisma.venta.findMany({
     where,
     include: {
+      usuario: true,
       cliente: true,
       sucursal: true,
       detalles: {
@@ -30,6 +31,7 @@ const getById = (id) =>
   prisma.venta.findUnique({
     where: { id },
     include: {
+      usuario: true,
       cliente: true,
       sucursal: true,
       detalles: {
@@ -40,7 +42,7 @@ const getById = (id) =>
     },
   });
 
-const registrarVenta = async ({ clienteId, sucursalId, items }) => {
+const registrarVenta = async ({ usuarioId, clienteId, sucursalId, items }) => {
   return prisma.$transaction(async (tx) => {
     const productoIds = items.map((i) => Number.parseInt(i.productoId, 10));
 
@@ -103,6 +105,7 @@ const registrarVenta = async ({ clienteId, sucursalId, items }) => {
 
     const venta = await tx.venta.create({
       data: {
+        usuarioId,
         clienteId,
         sucursalId,
         total: total.toFixed(2),
@@ -111,6 +114,7 @@ const registrarVenta = async ({ clienteId, sucursalId, items }) => {
         },
       },
       include: {
+        usuario: true,
         cliente: true,
         sucursal: true,
         detalles: {
