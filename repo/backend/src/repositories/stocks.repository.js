@@ -33,6 +33,30 @@ const create = (data) =>
     },
   });
 
+const reponer = ({ productoId, sucursalId, cantidad }) =>
+  prisma.stock.upsert({
+    where: {
+      productoId_sucursalId: {
+        productoId,
+        sucursalId,
+      },
+    },
+    update: {
+      cantidad: {
+        increment: cantidad,
+      },
+    },
+    create: {
+      productoId,
+      sucursalId,
+      cantidad,
+    },
+    include: {
+      producto: true,
+      sucursal: true,
+    },
+  });
+
 const update = (id, data) =>
   prisma.stock.update({
     where: { id },
@@ -49,6 +73,7 @@ module.exports = {
   list,
   getById,
   create,
+  reponer,
   update,
   remove,
 };

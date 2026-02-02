@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.get("/", stocksController.list);
 router.get("/:id", stocksController.getById);
+router.post("/reponer", stocksController.reponer);
 router.post("/", stocksController.create);
 router.put("/:id", stocksController.update);
 router.delete("/:id", stocksController.remove);

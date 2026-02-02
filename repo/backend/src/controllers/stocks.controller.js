@@ -68,6 +68,35 @@ const create = async (req, res, next) => {
   }
 };
 
+const reponer = async (req, res, next) => {
+  try {
+    if (!req.body) {
+      return res.status(400).json({
+        message: "Body requerido. Enviá JSON con header Content-Type: application/json",
+      });
+    }
+
+    const productoId = parseId(req.body.productoId);
+    const sucursalId = parseId(req.body.sucursalId);
+    const cantidad = parseId(req.body.cantidad);
+
+    if (Number.isNaN(productoId)) {
+      return res.status(400).json({ message: "productoId es requerido" });
+    }
+    if (Number.isNaN(sucursalId)) {
+      return res.status(400).json({ message: "sucursalId es requerido" });
+    }
+    if (Number.isNaN(cantidad) || cantidad <= 0) {
+      return res.status(400).json({ message: "cantidad inválida" });
+    }
+
+    const stock = await stocksService.reponer({ productoId, sucursalId, cantidad });
+    res.status(200).json(stock);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const update = async (req, res, next) => {
   try {
     const id = parseId(req.params.id);
@@ -109,6 +138,7 @@ const remove = async (req, res, next) => {
 module.exports = {
   list,
   getById,
+  reponer,
   create,
   update,
   remove,
