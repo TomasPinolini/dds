@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Cliente {
+  id        Int     @id @default(autoincrement())
+  nombre    String
+  email     String? @unique
+  telefono  String?
+  ventas    Venta[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Sucursal {
+  id        Int     @id @default(autoincrement())
+  nombre    String
+  direccion String?
+  stocks    Stock[]
+  ventas    Venta[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Producto {
+  id        Int     @id @default(autoincrement())
+  nombre    String
+  sku       String  @unique
+  precio    Decimal
+  stocks    Stock[]
+  detalles  DetalleVenta[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Stock {
+  id         Int      @id @default(autoincrement())
+  cantidad   Int
+  productoId Int
+  sucursalId Int
+  producto   Producto @relation(fields: [productoId], references: [id])
+  sucursal   Sucursal @relation(fields: [sucursalId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([productoId, sucursalId])
+}
+
+model Venta {
+  id         Int            @id @default(autoincrement())
+  fecha      DateTime       @default(now())
+  total      Decimal
+  clienteId  Int
+  sucursalId Int
+  cliente    Cliente        @relation(fields: [clienteId], references: [id])
+  sucursal   Sucursal       @relation(fields: [sucursalId], references: [id])
+  detalles   DetalleVenta[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model DetalleVenta {
+  id            Int      @id @default(autoincrement())
+  cantidad      Int
+  precioUnitario Decimal
+  ventaId       Int
+  productoId    Int
+  venta         Venta    @relation(fields: [ventaId], references: [id])
+  producto      Producto @relation(fields: [productoId], references: [id])
+}
