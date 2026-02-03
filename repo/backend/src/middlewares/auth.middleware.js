@@ -35,9 +35,9 @@ const authRequired = (req, _res, next) => {
   }
 };
 
-const requireRole = (role) => (req, _res, next) => {
+const requireRole = (...roles) => (req, _res, next) => {
   const userRole = req.user?.role;
-  if (userRole !== role) {
+  if (!userRole || roles.length === 0 || !roles.includes(userRole)) {
     const err = new Error("No autorizado");
     err.statusCode = 403;
     return next(err);

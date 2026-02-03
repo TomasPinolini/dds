@@ -6,7 +6,7 @@ const sucursalesRoutes = require("./routes/sucursales.routes");
 const stocksRoutes = require("./routes/stocks.routes");
 const ventasRoutes = require("./routes/ventas.routes");
 const authRoutes = require("./routes/auth.routes");
-const { authRequired, requireRole } = require("./middlewares/auth.middleware");
+const { authRequired } = require("./middlewares/auth.middleware");
 
 const app = express();
 
@@ -20,7 +20,6 @@ app.get("/health", (_req, res) => {
 });
 
 app.use(authRequired);
-app.use(requireRole("ADMIN"));
 
 app.use("/clientes", clientesRoutes);
 app.use("/productos", productosRoutes);
