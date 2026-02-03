@@ -1,6 +1,6 @@
 const ventasService = require("../services/ventas.service");
-
-const parseId = (value) => Number.parseInt(value, 10);
+const { parseId } = require("../utils/parse");
+const { parsePagination, paginatedResponse } = require("../utils/pagination");
 
 const list = async (req, res, next) => {
   try {
@@ -19,8 +19,9 @@ const list = async (req, res, next) => {
       return res.status(400).json({ message: "to inválido" });
     }
 
-    const ventas = await ventasService.list({ clienteId, from, to });
-    res.json(ventas);
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await ventasService.list({ clienteId, from, to, skip, limit });
+    res.json(paginatedResponse(data, total, page, limit));
   } catch (error) {
     next(error);
   }
@@ -28,16 +29,11 @@ const list = async (req, res, next) => {
 
 const getById = async (req, res, next) => {
   try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: "Id inválido" });
-    }
-
+    const { id } = req.validatedParams;
     const venta = await ventasService.getById(id);
     if (!venta) {
       return res.status(404).json({ message: "Venta no encontrada" });
     }
-
     res.json(venta);
   } catch (error) {
     next(error);
@@ -46,42 +42,12 @@ const getById = async (req, res, next) => {
 
 const registrarVenta = async (req, res, next) => {
   try {
-    if (!req.body) {
-      return res.status(400).json({
-        message: "Body requerido. Enviá JSON con header Content-Type: application/json",
-      });
-    }
-
     const usuarioId = parseId(req.user?.sub);
     if (Number.isNaN(usuarioId)) {
       return res.status(401).json({ message: "No autenticado" });
     }
 
-    const clienteId = parseId(req.body.clienteId);
-    const sucursalId = parseId(req.body.sucursalId);
-    const items = req.body.items;
-
-    if (Number.isNaN(clienteId)) {
-      return res.status(400).json({ message: "clienteId es requerido" });
-    }
-    if (Number.isNaN(sucursalId)) {
-      return res.status(400).json({ message: "sucursalId es requerido" });
-    }
-    if (!Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: "items es requerido" });
-    }
-
-    for (const item of items) {
-      const productoId = parseId(item.productoId);
-      const cantidad = parseId(item.cantidad);
-      if (Number.isNaN(productoId)) {
-        return res.status(400).json({ message: "productoId inválido" });
-      }
-      if (Number.isNaN(cantidad) || cantidad <= 0) {
-        return res.status(400).json({ message: "cantidad inválida" });
-      }
-    }
-
+    const { clienteId, sucursalId, items } = req.validatedBody;
     const venta = await ventasService.registrarVenta({ usuarioId, clienteId, sucursalId, items });
     res.status(201).json(venta);
   } catch (error) {

@@ -1,6 +1,7 @@
 const { prisma } = require("../db");
+const { AppError } = require("../utils/AppError");
 
-const list = (filters = {}) => {
+const list = async (filters = {}) => {
   const where = {};
 
   if (filters.clienteId !== undefined) where.clienteId = filters.clienteId;
@@ -11,20 +12,26 @@ const list = (filters = {}) => {
     if (filters.to) where.fecha.lte = filters.to;
   }
 
-  return prisma.venta.findMany({
-    where,
-    include: {
-      usuario: true,
-      cliente: true,
-      sucursal: true,
-      detalles: {
-        include: {
-          producto: true,
+  const [data, total] = await Promise.all([
+    prisma.venta.findMany({
+      where,
+      include: {
+        usuario: true,
+        cliente: true,
+        sucursal: true,
+        detalles: {
+          include: {
+            producto: true,
+          },
         },
       },
-    },
-    orderBy: { id: "desc" },
-  });
+      orderBy: { id: "desc" },
+      skip: filters.skip,
+      take: filters.limit,
+    }),
+    prisma.venta.count({ where }),
+  ]);
+  return { data, total };
 };
 
 const getById = (id) =>
@@ -70,15 +77,11 @@ const registrarVenta = async ({ usuarioId, clienteId, sucursalId, items }) => {
       });
 
       if (!stock) {
-        const err = new Error("Stock insuficiente");
-        err.statusCode = 400;
-        throw err;
+        throw new AppError("Stock insuficiente", 400);
       }
 
       if (stock.cantidad < cantidad) {
-        const err = new Error("Stock insuficiente");
-        err.statusCode = 400;
-        throw err;
+        throw new AppError("Stock insuficiente", 400);
       }
 
       await tx.stock.update({

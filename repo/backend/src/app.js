@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const swaggerUi = require("swagger-ui-express");
+const { swaggerSpec } = require("./config/swagger");
 const clientesRoutes = require("./routes/clientes.routes");
 const productosRoutes = require("./routes/productos.routes");
 const sucursalesRoutes = require("./routes/sucursales.routes");
@@ -12,6 +14,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/auth", authRoutes);
 
@@ -28,10 +32,19 @@ app.use("/stocks", stocksRoutes);
 app.use("/ventas", ventasRoutes);
 
 app.use((error, _req, res, _next) => {
+  const { AppError } = require("./utils/AppError");
+
+  if (error instanceof AppError) {
+    return res.status(error.statusCode).json({ message: error.message });
+  }
+
+  if (error?.statusCode && Number.isInteger(error.statusCode)) {
+    const message = error.statusCode === 500 ? "Error interno" : error.message;
+    return res.status(error.statusCode).json({ message });
+  }
+
   console.error(error);
-  const statusCode = error?.statusCode && Number.isInteger(error.statusCode) ? error.statusCode : 500;
-  const message = statusCode === 500 ? "Error interno" : error.message;
-  res.status(statusCode).json({ message });
+  res.status(500).json({ message: "Error interno" });
 });
 
 module.exports = { app };

@@ -1,6 +1,6 @@
 const clientesRepository = require("../repositories/clientes.repository");
 
-const list = () => clientesRepository.list();
+const list = (pagination) => clientesRepository.list(pagination);
 
 const getById = (id) => clientesRepository.getById(id);
 

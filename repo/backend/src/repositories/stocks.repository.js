@@ -1,18 +1,24 @@
 const { prisma } = require("../db");
 
-const list = (filters = {}) => {
+const list = async (filters = {}) => {
   const where = {};
   if (filters.productoId !== undefined) where.productoId = filters.productoId;
   if (filters.sucursalId !== undefined) where.sucursalId = filters.sucursalId;
 
-  return prisma.stock.findMany({
-    where,
-    include: {
-      producto: true,
-      sucursal: true,
-    },
-    orderBy: { id: "asc" },
-  });
+  const [data, total] = await Promise.all([
+    prisma.stock.findMany({
+      where,
+      include: {
+        producto: true,
+        sucursal: true,
+      },
+      orderBy: { id: "asc" },
+      skip: filters.skip,
+      take: filters.limit,
+    }),
+    prisma.stock.count({ where }),
+  ]);
+  return { data, total };
 };
 
 const getById = (id) =>

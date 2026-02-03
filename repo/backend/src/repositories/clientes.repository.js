@@ -1,6 +1,16 @@
 const { prisma } = require("../db");
 
-const list = () => prisma.cliente.findMany({ orderBy: { id: "asc" } });
+const list = async ({ skip, limit } = {}) => {
+  const [data, total] = await Promise.all([
+    prisma.cliente.findMany({
+      orderBy: { id: "asc" },
+      skip,
+      take: limit,
+    }),
+    prisma.cliente.count(),
+  ]);
+  return { data, total };
+};
 
 const getById = (id) => prisma.cliente.findUnique({ where: { id } });
 

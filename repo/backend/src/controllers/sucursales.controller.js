@@ -1,11 +1,11 @@
 const sucursalesService = require("../services/sucursales.service");
+const { parsePagination, paginatedResponse } = require("../utils/pagination");
 
-const parseId = (value) => Number.parseInt(value, 10);
-
-const list = async (_req, res, next) => {
+const list = async (req, res, next) => {
   try {
-    const sucursales = await sucursalesService.list();
-    res.json(sucursales);
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await sucursalesService.list({ skip, limit });
+    res.json(paginatedResponse(data, total, page, limit));
   } catch (error) {
     next(error);
   }
@@ -13,10 +13,7 @@ const list = async (_req, res, next) => {
 
 const getById = async (req, res, next) => {
   try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: "Id inválido" });
-    }
+    const { id } = req.validatedParams;
     const sucursal = await sucursalesService.getById(id);
     if (!sucursal) {
       return res.status(404).json({ message: "Sucursal no encontrada" });
@@ -29,18 +26,7 @@ const getById = async (req, res, next) => {
 
 const create = async (req, res, next) => {
   try {
-    if (!req.body) {
-      return res.status(400).json({
-        message: "Body requerido. Enviá JSON con header Content-Type: application/json",
-      });
-    }
-
-    const { nombre, direccion } = req.body;
-
-    if (!nombre || typeof nombre !== "string") {
-      return res.status(400).json({ message: "Nombre es requerido" });
-    }
-
+    const { nombre, direccion } = req.validatedBody;
     const sucursal = await sucursalesService.create({ nombre, direccion });
     res.status(201).json(sucursal);
   } catch (error) {
@@ -50,22 +36,8 @@ const create = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: "Id inválido" });
-    }
-    if (!req.body) {
-      return res.status(400).json({
-        message: "Body requerido. Enviá JSON con header Content-Type: application/json",
-      });
-    }
-
-    const { nombre, direccion } = req.body;
-
-    if (!nombre || typeof nombre !== "string") {
-      return res.status(400).json({ message: "Nombre es requerido" });
-    }
-
+    const { id } = req.validatedParams;
+    const { nombre, direccion } = req.validatedBody;
     const sucursal = await sucursalesService.update(id, { nombre, direccion });
     res.json(sucursal);
   } catch (error) {
@@ -75,10 +47,7 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
   try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: "Id inválido" });
-    }
+    const { id } = req.validatedParams;
     await sucursalesService.remove(id);
     res.status(204).send();
   } catch (error) {

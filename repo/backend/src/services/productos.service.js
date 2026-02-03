@@ -1,6 +1,6 @@
 const productosRepository = require("../repositories/productos.repository");
 
-const list = () => productosRepository.list();
+const list = (pagination) => productosRepository.list(pagination);
 
 const getById = (id) => productosRepository.getById(id);
 

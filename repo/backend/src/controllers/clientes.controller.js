@@ -1,11 +1,11 @@
 const clientesService = require("../services/clientes.service");
+const { parsePagination, paginatedResponse } = require("../utils/pagination");
 
-const parseId = (value) => Number.parseInt(value, 10);
-
-const list = async (_req, res, next) => {
+const list = async (req, res, next) => {
   try {
-    const clientes = await clientesService.list();
-    res.json(clientes);
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await clientesService.list({ skip, limit });
+    res.json(paginatedResponse(data, total, page, limit));
   } catch (error) {
     next(error);
   }
@@ -13,10 +13,7 @@ const list = async (_req, res, next) => {
 
 const getById = async (req, res, next) => {
   try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: "Id inválido" });
-    }
+    const { id } = req.validatedParams;
     const cliente = await clientesService.getById(id);
     if (!cliente) {
       return res.status(404).json({ message: "Cliente no encontrado" });
@@ -29,15 +26,7 @@ const getById = async (req, res, next) => {
 
 const create = async (req, res, next) => {
   try {
-    if (!req.body) {
-      return res.status(400).json({
-        message: "Body requerido. Enviá JSON con header Content-Type: application/json",
-      });
-    }
-    const { nombre, email, telefono } = req.body;
-    if (!nombre || typeof nombre !== "string") {
-      return res.status(400).json({ message: "Nombre es requerido" });
-    }
+    const { nombre, email, telefono } = req.validatedBody;
     const cliente = await clientesService.create({ nombre, email, telefono });
     res.status(201).json(cliente);
   } catch (error) {
@@ -47,19 +36,8 @@ const create = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: "Id inválido" });
-    }
-    if (!req.body) {
-      return res.status(400).json({
-        message: "Body requerido. Enviá JSON con header Content-Type: application/json",
-      });
-    }
-    const { nombre, email, telefono } = req.body;
-    if (!nombre || typeof nombre !== "string") {
-      return res.status(400).json({ message: "Nombre es requerido" });
-    }
+    const { id } = req.validatedParams;
+    const { nombre, email, telefono } = req.validatedBody;
     const cliente = await clientesService.update(id, { nombre, email, telefono });
     res.json(cliente);
   } catch (error) {
@@ -69,10 +47,7 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
   try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: "Id inválido" });
-    }
+    const { id } = req.validatedParams;
     await clientesService.remove(id);
     res.status(204).send();
   } catch (error) {

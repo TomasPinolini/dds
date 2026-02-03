@@ -40,7 +40,7 @@ export const api = {
   createUser: ({ token, email, password, role }) =>
     request("/auth/users", { method: "POST", token, body: { email, password, role } }),
 
-  listVentas: ({ token }) => request("/ventas", { token }),
+  listVentas: ({ token }) => request("/ventas", { token }).then((res) => res.data),
   registrarVenta: ({ token, clienteId, sucursalId, items }) =>
     request("/ventas/registrar", {
       method: "POST",
@@ -48,7 +48,7 @@ export const api = {
       body: { clienteId, sucursalId, items },
     }),
 
-  listStocks: ({ token }) => request("/stocks", { token }),
+  listStocks: ({ token }) => request("/stocks", { token }).then((res) => res.data),
   reponerStock: ({ token, productoId, sucursalId, cantidad }) =>
     request("/stocks/reponer", {
       method: "POST",
@@ -56,17 +56,17 @@ export const api = {
       body: { productoId, sucursalId, cantidad },
     }),
 
-  listClientes: ({ token }) => request("/clientes", { token }),
+  listClientes: ({ token }) => request("/clientes", { token }).then((res) => res.data),
   createCliente: ({ token, nombre, email, telefono }) =>
     request("/clientes", { method: "POST", token, body: { nombre, email, telefono } }),
   deleteCliente: ({ token, id }) => request(`/clientes/${id}`, { method: "DELETE", token }),
 
-  listProductos: ({ token }) => request("/productos", { token }),
+  listProductos: ({ token }) => request("/productos", { token }).then((res) => res.data),
   createProducto: ({ token, nombre, sku, precio }) =>
     request("/productos", { method: "POST", token, body: { nombre, sku, precio } }),
   deleteProducto: ({ token, id }) => request(`/productos/${id}`, { method: "DELETE", token }),
 
-  listSucursales: ({ token }) => request("/sucursales", { token }),
+  listSucursales: ({ token }) => request("/sucursales", { token }).then((res) => res.data),
   createSucursal: ({ token, nombre, direccion }) =>
     request("/sucursales", { method: "POST", token, body: { nombre, direccion } }),
   deleteSucursal: ({ token, id }) => request(`/sucursales/${id}`, { method: "DELETE", token }),

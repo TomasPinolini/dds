@@ -1,18 +1,11 @@
 const productosService = require("../services/productos.service");
+const { parsePagination, paginatedResponse } = require("../utils/pagination");
 
-const parseId = (value) => Number.parseInt(value, 10);
-
-const normalizePrecio = (precio) => {
-  if (precio === null || precio === undefined) return undefined;
-  if (typeof precio === "number") return precio.toString();
-  if (typeof precio === "string") return precio;
-  return undefined;
-};
-
-const list = async (_req, res, next) => {
+const list = async (req, res, next) => {
   try {
-    const productos = await productosService.list();
-    res.json(productos);
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await productosService.list({ skip, limit });
+    res.json(paginatedResponse(data, total, page, limit));
   } catch (error) {
     next(error);
   }
@@ -20,10 +13,7 @@ const list = async (_req, res, next) => {
 
 const getById = async (req, res, next) => {
   try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: "Id inválido" });
-    }
+    const { id } = req.validatedParams;
     const producto = await productosService.getById(id);
     if (!producto) {
       return res.status(404).json({ message: "Producto no encontrado" });
@@ -36,25 +26,7 @@ const getById = async (req, res, next) => {
 
 const create = async (req, res, next) => {
   try {
-    if (!req.body) {
-      return res.status(400).json({
-        message: "Body requerido. Enviá JSON con header Content-Type: application/json",
-      });
-    }
-
-    const { nombre, sku } = req.body;
-    const precio = normalizePrecio(req.body.precio);
-
-    if (!nombre || typeof nombre !== "string") {
-      return res.status(400).json({ message: "Nombre es requerido" });
-    }
-    if (!sku || typeof sku !== "string") {
-      return res.status(400).json({ message: "SKU es requerido" });
-    }
-    if (precio === undefined || precio.trim().length === 0) {
-      return res.status(400).json({ message: "Precio es requerido" });
-    }
-
+    const { nombre, sku, precio } = req.validatedBody;
     const producto = await productosService.create({ nombre, sku, precio });
     res.status(201).json(producto);
   } catch (error) {
@@ -64,29 +36,8 @@ const create = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: "Id inválido" });
-    }
-    if (!req.body) {
-      return res.status(400).json({
-        message: "Body requerido. Enviá JSON con header Content-Type: application/json",
-      });
-    }
-
-    const { nombre, sku } = req.body;
-    const precio = normalizePrecio(req.body.precio);
-
-    if (!nombre || typeof nombre !== "string") {
-      return res.status(400).json({ message: "Nombre es requerido" });
-    }
-    if (!sku || typeof sku !== "string") {
-      return res.status(400).json({ message: "SKU es requerido" });
-    }
-    if (precio === undefined || precio.trim().length === 0) {
-      return res.status(400).json({ message: "Precio es requerido" });
-    }
-
+    const { id } = req.validatedParams;
+    const { nombre, sku, precio } = req.validatedBody;
     const producto = await productosService.update(id, { nombre, sku, precio });
     res.json(producto);
   } catch (error) {
@@ -96,10 +47,7 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
   try {
-    const id = parseId(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ message: "Id inválido" });
-    }
+    const { id } = req.validatedParams;
     await productosService.remove(id);
     res.status(204).send();
   } catch (error) {

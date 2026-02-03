@@ -1,6 +1,16 @@
 const { prisma } = require("../db");
 
-const list = () => prisma.producto.findMany({ orderBy: { id: "asc" } });
+const list = async ({ skip, limit } = {}) => {
+  const [data, total] = await Promise.all([
+    prisma.producto.findMany({
+      orderBy: { id: "asc" },
+      skip,
+      take: limit,
+    }),
+    prisma.producto.count(),
+  ]);
+  return { data, total };
+};
 
 const getById = (id) => prisma.producto.findUnique({ where: { id } });
 
